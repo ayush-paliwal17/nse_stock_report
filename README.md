@@ -7,3 +7,4 @@ A python script that generates a custom Stock(equity) portfolio report using dat
 
 # Required Packages
 1. requests
+2. json2html

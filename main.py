@@ -1,18 +1,44 @@
-from nselib import capital_market
+from utils import bhav_copy_equities
 from json2html import *
-import json
-import csv
+import datetime
+import boto3
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-def nse_data(date):
+
+def send_email(email_message):
+    """Send email."""
+    message = MIMEMultipart()
+    message['Subject'] = 'Daily Portfolio Report'
+    message['From'] = 'paliwal.ayush721@gmail.com'
+    message['To'] = 'paliwal.ayush721@gmail.com'
+
+    part = MIMEText(email_message, 'html')
+    message.attach(part)
+
+    email_client = boto3.client('ses', region_name='us-east-1')
+    try:
+        email_client.send_raw_email(
+            Source='paliwal.ayush721@gmail.com',
+            Destinations=['paliwal.ayush721@gmail.com'],
+            RawMessage={
+                'Data': message.as_string()
+            }
+        )
+        print("Email Sent Successfully")
+    except Exception:
+        print(Exception)
+
+
+def nse_data():
     """Get data From NSE for the specified Date"""
-
-    data = capital_market.bhav_copy_equities("04-01-2024")
+    date = (datetime.datetime.today()-datetime.timedelta(days=1)).strftime('%d-%m-%Y')
+    data = bhav_copy_equities(date)
     return data
 
 
 def filter_data(data,share):
     """Filter Through The data to get the data for the required Shares"""
-
     filter = (data['SYMBOL']== share['Name'])
     data = data.loc[filter,['SYMBOL','CLOSE','PREVCLOSE']]
     data = (str(data).replace('\n',' ')).split()
@@ -40,7 +66,6 @@ def filter_data(data,share):
 
 def html_table(json_data):
     """Convert The generated JSON into HTML Table"""
-
     table = json2html.convert(json_data, table_attributes = 'border="0.5" style="background-color:black;"')
     table = table.replace('<thead>','<thead align="Centre" style="background-color:limegreen;">')
     table = table.replace('<tbody>','<tbody align="Right" style="background-color:chartreuse;">')
@@ -50,7 +75,6 @@ def html_table(json_data):
 
 def main():
     """Main Function"""
-
     final_data = []
     dict = [{'Name' :'ADANIENT','Quantity': 100,'Buying Price' : 2000},
             {'Name' :'IDEAFORGE','Quantity': 100,'Buying Price' : 650},
@@ -58,26 +82,18 @@ def main():
             {'Name' :'KPIGREEN','Quantity': 100,'Buying Price' : 800}]
 
     try:
-        data = nse_data(None)
-    except:
+        data = nse_data()
+    except Exception:
         raise ValueError("NO DATA FOUND")
     else:
         for item in dict:
             dict_data = filter_data(data,item)
             final_data.append(dict_data)
-        
-        table = html_table(final_data)
+        table = html_table(final_data)  
 
-        ##Write to a JSON file
-        with open('Report.json','w') as f:
-            json.dump(final_data,fp=f)
+        send_email(email_message=table)
+    
 
 
 if __name__ == "__main__":
     main()
-##Write To a CSV File
-# with open('Report.csv','w') as f:
-#     writer = csv.DictWriter(f,fieldnames=final_data[0].keys())
-#     writer.writeheader()
-#     for item in final_data:
-#         writer.writerow(item)

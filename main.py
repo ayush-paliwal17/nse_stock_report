@@ -73,7 +73,7 @@ def html_table(json_data):
     return table
 
 
-def main():
+def main(event,context):
     """Main Function"""
     final_data = []
     dict = [{'Name' :'ADANIENT','Quantity': 100,'Buying Price' : 2000},
@@ -96,4 +96,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(None,None)

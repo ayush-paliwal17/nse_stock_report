@@ -1,7 +1,6 @@
 from datetime import datetime
 import requests
 import pandas as pd
-import datetime as dt
 import zipfile
 from io import BytesIO
 
@@ -20,8 +19,8 @@ dd_mm_yyyy = '%d-%m-%Y'
 
 def nse_urlfetch(url):
     r_session = requests.session()
-    nse_live = r_session.get("http://nseindia.com", headers=header)
-    return r_session.get(url, headers=header)
+    res = r_session.get(url, headers=header)
+    return res
 
 
 def bhav_copy_equities(trade_date: str):
